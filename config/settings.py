@@ -36,7 +36,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    'django.contrib.gis'
+    'django.contrib.gis',
+    'tracker.apps.TrackerConfig'
 ]
 
 MIDDLEWARE = [
