@@ -2,7 +2,7 @@
 
 ![If Slaughterhouse would have glass walls, everyone would be vegetarian.](assets/images/project-cover.png)
 
-_**The Glass Walls Projects**_ is an interactive map to track locations and violations of slaughterhouses around the world. It is part of the [**_Karhun Henki_**](https://github.com/LarkaFenrir/karhun-henki) brand.
+_**The Glass Walls Projects**_ is an interactive map to track locations and violations of slaughterhouses around the world. It is part of the [**_Karhun Henki_**](https://github.com/LarkaFenrir/karhun-henki) initiative.
 
 ## Built With
 Stack used to build this project (so far):   
