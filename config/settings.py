@@ -37,7 +37,9 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'django.contrib.gis',
-    'tracker.apps.TrackerConfig'
+    'tracker.apps.TrackerConfig',
+    'rest_framework',
+    'rest_framework_gis'
 ]
 
 MIDDLEWARE = [
