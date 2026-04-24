@@ -17,7 +17,7 @@ class TrackerModelTest(TestCase):
             name='Schlachthof Gärtringen',
             operator=cls.company,
             city='Gärtringen',
-            country='DE',
+            country_code='DE',
             postal_code='71116',
             street='Riedbrunnenstraße',
             street_number='5',

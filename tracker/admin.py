@@ -19,7 +19,7 @@ class FacilityAdmin(admin.GISModelAdmin):
         'name',
         'operator',
         'city',
-        'country',
+        'country_code',
         'postal_code',
         'street'
     )
