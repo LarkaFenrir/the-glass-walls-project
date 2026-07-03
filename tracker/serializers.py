@@ -3,6 +3,7 @@ from rest_framework_gis.serializers import GeoFeatureModelSerializer
 from models import Facility, Company, Violation
 from i18naddress import normalize_address, InvalidAddressError
 from sanitizers import strip_all_strings, clean_website_url, upper_country_code
+from django.utils import timezone
 
 class FacilitySerializer(GeoFeatureModelSerializer):
 
@@ -63,8 +64,8 @@ class CompanySerializer(serializers.ModelSerializer):
             'website'
         ]
 
-    def validate_website(self, data):
-        pass
+    def validate_website(self, value):
+        return clean_website_url(value)
 
 class ViolationSerializer(serializers.ModelSerializer):
 
@@ -78,11 +79,10 @@ class ViolationSerializer(serializers.ModelSerializer):
             'evidence_file'
         ]
 
-    def validate_date_observed(self, data):
-        pass
+    def validate_date_observed(self, value):
+        if value > timezone.now().date():
+            raise serializers.ValidationError("The date cannot be in the future.")
+        return value
 
-    def validate_evidence_url(self, data):
-        pass
-
-    def validate_evidence_file(self, data):
-        pass
+    def validate_evidence_url(self, value):
+        return clean_website_url(value)
