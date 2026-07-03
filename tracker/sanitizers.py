@@ -22,7 +22,7 @@ def clean_website_url(url):
     '''
     if url:
         url = url.lower().strip()
-        if not url.startswith(('http://', 'https://')):
+        if url and not url.startswith(('http://', 'https://')):
             return f'https://{url}'
     # if the url is None or an empty string, it doesn't strip it
     # avoid getting an error
