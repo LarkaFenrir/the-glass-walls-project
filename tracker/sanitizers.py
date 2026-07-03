@@ -18,13 +18,15 @@ def strip_all_strings(data, fields=None):
 def clean_website_url(url):
     '''
     Standardizes URL input by stripping whitespace,
-    and ensuring a protocol prefix.
+    and ensuring lowercase and a protocol prefix.
     '''
-    if url and not url.startswith(('http://', 'https://')):
-        return f'https://{url.strip()}'
+    if url:
+        url = url.lower().strip()
+        if not url.startswith(('http://', 'https://')):
+            return f'https://{url}'
     # if the url is None or an empty string, it doesn't strip it
     # avoid getting an error
-    return url.strip() if url else url
+    return url
 
 def upper_country_code(country_code):
     '''
