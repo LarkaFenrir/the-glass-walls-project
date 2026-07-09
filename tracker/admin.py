@@ -19,8 +19,8 @@ class FacilityAdmin(admin.GISModelAdmin):
         'name',
         'operator',
         'city',
-        'country',
-        'postcode',
+        'country_code',
+        'postal_code',
         'street'
     )
     search_fields = (
@@ -28,7 +28,7 @@ class FacilityAdmin(admin.GISModelAdmin):
         'operator__name',
         'city',
         'country',
-        'postcode'
+        'postal_code'
     )
 
     inlines = [ViolationInline]

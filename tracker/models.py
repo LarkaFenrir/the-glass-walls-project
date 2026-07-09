@@ -13,8 +13,8 @@ class Facility(models.Model):
         blank=True
     )
     city = models.CharField(max_length=255)
-    country = models.CharField(max_length=255)
-    postcode = models.CharField(max_length=30, blank=True)
+    country_code = models.CharField(max_length=2)
+    postal_code = models.CharField(max_length=30, blank=True)
     street = models.CharField(max_length=255, blank=True)
     street_number = models.CharField(max_length=10, blank=True)
     coordinates = models.PointField()
