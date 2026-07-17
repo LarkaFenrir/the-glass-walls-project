@@ -19,6 +19,6 @@ from .views import FacilityList, FacilityDetail
 
 app_name = 'tracker'
 urlpatterns = [
-    path('facility/', FacilityList.as_view(), name='facility-list'),
-    path('facility/<int:pk>', FacilityDetail.as_view(), name='facility-detail')
+    path('facilities/', FacilityList.as_view(), name='facilities-list'),
+    path('facility/<int:pk>/', FacilityDetail.as_view(), name='facility-detail')
 ]
