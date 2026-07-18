@@ -128,4 +128,8 @@ class TrackerSerializer(serializers.Serializer):
         if violation_data:
             violation = Violation.objects.create(facility=facility, **violation_data)
 
-        return violation
+        return {
+            'company': company,
+            'facility': facility,
+            'violation': violation
+        }
