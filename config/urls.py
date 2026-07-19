@@ -19,9 +19,12 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from rest_framework.authtoken.views import obtain_auth_token
+import os
+
+admin_path = os.environ.get('DJANGO_ADMIN_PATH', 'admin/')
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path(admin_path, admin.site.urls),
     path('api/', include('tracker.urls', namespace='tracker')),
     path('api_token_auth/', obtain_auth_token, name='api-token-auth')
 ]
