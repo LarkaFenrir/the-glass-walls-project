@@ -10,9 +10,11 @@ class CompanySerializer(serializers.ModelSerializer):
     class Meta:
         model = Company
         fields = [
+            'id',
             'name',
             'website'
         ]
+        read_only_fields = ['id']
 
     def to_internal_value(self, data):
         '''
@@ -29,12 +31,14 @@ class CompanySerializer(serializers.ModelSerializer):
         # it validates with the built-in method of Django-REST framework again
         return super().to_internal_value(data)
 
+
 class FacilitySerializer(GeoFeatureModelSerializer):
 
     class Meta:
         model = Facility
         geo_field = 'coordinates'
         fields = [
+            'id',
             'external_id',
             'name',
             'operator',
@@ -45,6 +49,7 @@ class FacilitySerializer(GeoFeatureModelSerializer):
             'street_number',
             'coordinates'
         ]
+        read_only_fields = ['id']
 
         extra_kwargs = {
             'operator': {'required': False, 'allow_null': True}
@@ -54,32 +59,53 @@ class FacilitySerializer(GeoFeatureModelSerializer):
         '''
         Sanitize the input data and use Google's i18n database
         to validate the address components.
+        It works also if the method is PATCH and UPDATE, not only PUT.
         '''
-        # combine street name and number to validate,
-        # but keep it separate for clean data structure
         data = strip_all_strings(data)
         if 'country_code' in data:
             data['country_code'] = upper_country_code(data['country_code'])
-        full_address = f"{data.get('street')} {data.get('street_number')}"
+
+        existing_facility = self.instance
+        street = data.get('street') or getattr(existing_facility, 'street', '')
+        street_number = data.get('street_number') or getattr(
+            existing_facility, 'street_number', ''
+        )
+        # combine street name and number to validate,
+        # but keep it separate for clean data structure
+        full_address = f'{street} {street_number}'
+
+        city = data.get('city') or getattr(existing_facility, 'city', '')
+        country_code = data.get('country_code') or getattr(
+            existing_facility, 'country_code', ''
+        )
+        postal_code = data.get('postal_code') or getattr(
+            existing_facility, 'postal_code', ''
+        )
+
         address_data = {
-            'city': data.get('city'),
-            'country_code': data.get('country_code'),
-            'postal_code': data.get('postal_code'),
+            'city': city,
+            'country_code': country_code,
+            'postal_code': postal_code,
             'street_address': full_address
         }
 
-        try:
-            # after validating the street address it doesn't overwrite it
-            normalized_data = normalize_address(address_data)
-            data['city'] = normalized_data.get('city')
-            data['country_code'] = normalized_data.get('country_code')
-            data['postal_code'] = normalized_data.get('postal_code')
+        if country_code and city:
+            try:
+                # validate the address using the google library
+                normalized_data = normalize_address(address_data)
 
-        except InvalidAddressError as e:
-            errors = {}
-            for field, error_code in e.errors.items():
-                errors[field] = f'Invalid {field} for the selected country.'
-            raise serializers.ValidationError(errors)
+                # only keep canonical values for country code and postal code
+                # preserve the original street and city capitalization
+                if 'country_code' in data or not existing_facility:
+                    data['country_code'] = normalized_data['country_code']
+                if 'postal_code' in data or not existing_facility:
+                    data['postal_code'] = normalized_data['postal_code']
+
+            except InvalidAddressError as e:
+                errors = {}
+                for field, error_code in e.errors.items():
+                    errors[field] = f'Invalid {field} for the selected country.'
+                raise serializers.ValidationError(errors)
 
         return data
 
@@ -88,12 +114,14 @@ class ViolationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Violation
         fields = [
+            'id',
             'facility',
             'date_observed',
             'description',
             'evidence_url',
             'evidence_file'
         ]
+        read_only_fields = ['id']
 
         extra_kwargs = {
             'facility': {'required': False, 'allow_null': True}
@@ -110,26 +138,54 @@ class ViolationSerializer(serializers.ModelSerializer):
             data['evidence_url'] = clean_website_url(data['evidence_url'])
         return super().to_internal_value(data)
 
+
 class TrackerSerializer(serializers.Serializer):
 
     company = CompanySerializer()
     facility = FacilitySerializer()
-    violation = ViolationSerializer(required=False, allow_null=True)
 
     def create(self, validated_data):
         company_data = validated_data.pop('company')
         facility_data = validated_data.pop('facility')
-        violation_data = validated_data.pop('violation', None)
 
         company = Company.objects.create(**company_data)
         facility = Facility.objects.create(operator=company, **facility_data)
 
-        violation = None   # in case no violation is given, no error thrown
-        if violation_data:
-            violation = Violation.objects.create(facility=facility, **violation_data)
-
         return {
             'company': company,
-            'facility': facility,
-            'violation': violation
+            'facility': facility
+        }
+
+    def update(self, instance, validated_data):
+        company_data = validated_data.pop('company', None)
+        facility_data = validated_data.pop('facility', None)
+
+        # it gets the 'facility' object if it exists, otherwise None to prevent errors
+        facility_instance = getattr(
+            instance, 'facility', instance.get('facility')
+            if isinstance(instance, dict) else instance
+        )
+        # checks if there is company data with which to update the db record,
+        # and if there is a db at all to handle edge cases
+        company_instance = getattr(facility_instance, 'operator', None)
+
+        if company_data and company_instance:
+            # which record is updated, with what, and that is a PATCH method
+            company_serializer = CompanySerializer(
+                company_instance, data=company_data, partial=True
+            )
+            # if it is invalid, raise a 400 Bad Request error
+            company_serializer.is_valid(raise_exception=True)
+            company_instance = company_serializer.save()
+
+        if facility_data and facility_instance:
+            facility_serializer = FacilitySerializer(
+                facility_instance, data=facility_data, partial=True
+            )
+            facility_serializer.is_valid(raise_exception=True)
+            facility_instance = facility_serializer.save()
+
+        return {
+            'company': company_instance,
+            'facility': facility_instance
         }
