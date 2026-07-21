@@ -9,7 +9,8 @@ class TrackerModelTest(TestCase):
     def setUpTestData(cls):
 
         cls.company = Company.objects.create(
-            name='Schlachthof eG'
+            name='Schlachthof eG',
+            website='https://companyweb.com'
         )
 
         cls.facility = Facility.objects.create(
@@ -35,13 +36,21 @@ class TrackerModelTest(TestCase):
         Test the creation of the company, and the associated facilities.
         '''
         self.assertEqual(self.company.name, 'Schlachthof eG')
+        self.assertEqual(self.company.website, 'https://companyweb.com')
         self.assertEqual(self.company.facilities.count(), 1)
         self.assertEqual(self.company.facilities.first().name, 'Schlachthof Gärtringen')
 
     def test_facility_creation(self):
+        self.assertEqual(self.facility.external_id, 'way/29177094')
         self.assertEqual(self.facility.name, 'Schlachthof Gärtringen')
         self.assertEqual(self.facility.operator.name, 'Schlachthof eG')
+        self.assertEqual(self.facility.city, 'Gärtringen')
+        self.assertEqual(self.facility.country_code, 'DE')
+        self.assertEqual(self.facility.postal_code, '71116')
+        self.assertEqual(self.facility.street, 'Riedbrunnenstraße')
+        self.assertEqual(self.facility.street_number, '5')
         self.assertEqual(self.facility.coordinates.x, 8.9190879)
+        self.assertEqual(self.facility.coordinates.y, 48.6396181)
 
     def test_violation_creation(self):
         self.assertEqual(self.violation.facility.name, 'Schlachthof Gärtringen')
